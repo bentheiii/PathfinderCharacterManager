@@ -18,9 +18,13 @@ namespace PathfinderCharacterManager
         public string Text { get; }
         public T Value { get; }
     }
+    public class DecisionInterfaceType
+    {
+        public static DecisionInterfaceType StandardList = new DecisionInterfaceType(); 
+    }
     public class Decision<T>
     {
-        public Decision(string title, string text, params Choice<T>[] choices)
+        public Decision(string title, string text, DecisionInterfaceType iType, params Choice<T>[] choices)
         {
             Choices = choices;
             Title = title;

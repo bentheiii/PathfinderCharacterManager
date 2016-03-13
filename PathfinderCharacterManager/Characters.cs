@@ -21,30 +21,21 @@ namespace PathfinderCharacterManager
     }
     public class Character
     {
-        public string Name { get; }
-        public ModifiableStat<Species> Race { get; }
-        public ModifiableStat<Gender> Gender { get; }
-        public IDictionary<Ability, ModifiableStat<int>> Abilities { get; } = new Dictionary<Ability, ModifiableStat<int>>();
-        public IDictionary<SkillType,RankedSkill> Skills { get; } = new Dictionary<SkillType, RankedSkill>();
-        public ModifiableStat<int> Hp { get; } = new ModifiableStat<int>(0);
-        public IDictionary<DamageKind, int> Damage { get; } = new Dictionary<DamageKind, int>();
-        public IDictionary<Class, int> Levels { get; } = new Dictionary<Class, int>();
         public IDictionary<EventType, List<IEventSubscriber>> subscribers { get; } = new Dictionary<EventType, List<IEventSubscriber>>();
-        public IDictionary<EffectType, ConfigurableStat<ResistanceType>> Resistances = new Dictionary<EffectType, ConfigurableStat<ResistanceType>>();
-        public ConfigurableStat<SizeCatagory> size = new ConfigurableStat<SizeCatagory>(null);
-        public virtual void DealDamage(EffectType type, DamageKind kind, int damage)
+        public virtual void DealDamage(EffectType type, DamageKind kind, int damage, DecisionMaker maker)
         {
-            Damage.EnsureDefinition(kind);
-            Damage[kind] += damage;
+            damage = this.Notify<int>(new DamageToDeal(damage, kind, type)).LastOrDefault(damage);
+            //TODO deal damage
+        }
+        public virtual IEnumerable<Class> getEligableClasses(DecisionMaker maker)
+        {
+            return this.Notify<Class>(new EligableClassRequestEvent(this)).Distinct();
         }
         public virtual void LevelUp(DecisionMaker m)
         {
-            var cl = m.Choose(new Decision<Class>("Which class to level up", "Choose a class to level up in",
-                    this.Notify(new EligableClassRequestEvent(this)).OfType<Class>().Distinct().SelectToArray(a => new Choice<Class>(a.name, $"level up in {a.name}", a)))).Value;
-            Levels.EnsureDefinition(cl);
-            Levels[cl]++;
-            cl.AddLevel(this,m);
-            this.Notify(new LevelUpEvent(cl));
+            var cl = m.Choose(new Decision<Class>("Which class to level up", "Choose a class to level up in",DecisionInterfaceType.StandardList,
+                    getEligableClasses(m).SelectToArray(a => new Choice<Class>(a.name, $"level up in {a.name}", a)))).Value;
+            this.Notify(new LevelUpEvent(cl, m));
         }
         //TODO equipment
         //TODO feats
@@ -55,9 +46,9 @@ namespace PathfinderCharacterManager
     }
     public static class CharacterExtensions
     {
-        public static void Subscribe(this Character @this, IEventSubscriber subscriber, EventType typestosub)
+        public static void Subscribe(this Character @this, IEventSubscriber subscriber)
         {
-            foreach (EventType type in typestosub.EnumFlags())
+            foreach (EventType type in subscriber.typesToSubscribe.EnumFlags())
             {
                 @this.subscribers.EnsureDefinition(type, new List<IEventSubscriber>());
                 @this.subscribers[type].Add(subscriber);
@@ -67,9 +58,24 @@ namespace PathfinderCharacterManager
         {
             @this.subscribers.Values.Where(a=>a.Contains(subscriber)).Do(a=>a.Remove(subscriber));
         }
-        public static object[] Notify(this Character @this, Event e)
+        private static IEnumerable<T> CascadeEvent<T>(this IEnumerable<IEventSubscriber> subs, Event e)
         {
-            return e.type.EnumFlags().SelectMany(a => @this.subscribers[a]).Distinct().Select(a=>a.ActivateEvent(e)).ToArray();
-        } 
+            foreach (var sub in subs)
+            {
+                if (e == null)
+                    yield break;
+                var ret = sub.ActivateEvent(e, out e);
+                if (ret is T)
+                    yield return (T)ret;
+            }
+        }
+        public static T[] Notify<T>(this Character @this, Event e)
+        {
+            return e.type.EnumFlags().SelectMany(a => @this.subscribers[a]).Distinct().CascadeEvent<T>(e).ToArray();
+        }
+        public static void Notify(this Character @this, Event e)
+        {
+            e.type.EnumFlags().SelectMany(a => @this.subscribers[a]).Distinct().CascadeEvent<object>(e).Do();
+        }
     }
 }

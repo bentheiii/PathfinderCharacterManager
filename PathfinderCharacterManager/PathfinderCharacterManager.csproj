@@ -55,7 +55,6 @@
     <Compile Include="SaveRolls.cs" />
     <Compile Include="Skills.cs" />
     <Compile Include="Species.cs" />
-    <Compile Include="Stats.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

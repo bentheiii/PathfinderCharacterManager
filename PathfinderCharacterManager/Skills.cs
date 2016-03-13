@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Linq;
+using Edge.Guard;
+using Edge.Looping;
 
 namespace PathfinderCharacterManager
 {
@@ -80,30 +83,18 @@ namespace PathfinderCharacterManager
                 return ability == Ability.Strength || ability == Ability.Dexterity;
             }
         }
-        public virtual int Bonus()
-        {
-            throw new NotImplementedException();
-        }
-    }
-    public class RankedSkill
-    {
-        public RankedSkill(SkillType type, Character owner)
-        {
-            this.type = type;
-            this.owner = owner;
-            Ranks = 0;
-        }
-        public SkillType type { get; }
-        public Character owner { get; }
-        public int Ranks { get; set; }
-        public ConfigurableStat<int> Modifiers { get; } = new ConfigurableStat<int>(0);
         public bool IsClassSkill(Character c)
         {
-            throw new NotImplementedException();
+            IGuard<bool> all = new Guard<bool>();
+            IGuard<bool> any = new Guard<bool>();
+            var tor =  c.Notify<bool>(new IsClassSkillRequestEvent(this)).HookCond(a=>a, all: all, any: any);
+            tor.Do();
+            return all.value && any.value;
         }
-        public int Bonus(Character c)
+        public int Bonus(Character c, SkillApplication ap)
         {
-            throw new NotImplementedException();
+            return c.Notify<int>(new SkillBonusRequestEvent(this, ap)).Sum();
         }
     }
+    public interface SkillApplication { }
 }
