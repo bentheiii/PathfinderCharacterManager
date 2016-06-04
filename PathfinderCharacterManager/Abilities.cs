@@ -14,7 +14,7 @@ namespace PathfinderCharacterManager
                                        Intelligence = new Ability("intelligence", "int"),
                                        Wisdom = new Ability("wisdom", "wis"),
                                        Charisma = new Ability("charisma", "cha");
-        internal Ability(string name, string shorthand)
+        private Ability(string name, string shorthand)
         {
             this.name = name;
             this.shorthand = shorthand;

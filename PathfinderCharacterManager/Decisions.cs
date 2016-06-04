@@ -20,7 +20,8 @@ namespace PathfinderCharacterManager
     }
     public class DecisionInterfaceType
     {
-        public static DecisionInterfaceType StandardList = new DecisionInterfaceType(); 
+        public static readonly
+            DecisionInterfaceType List = new DecisionInterfaceType(), DialogRadio = new DecisionInterfaceType();
     }
     public class Decision<T>
     {
@@ -37,5 +38,6 @@ namespace PathfinderCharacterManager
     public interface DecisionMaker
     {
         Choice<T> Choose<T>(Decision<T> decision);
+        IEnumerable<Choice<T>> Choose<T>(Decision<T> decision, Func<IEnumerable<T>, bool> canContinue);
     }
 }

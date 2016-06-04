@@ -1,48 +1,48 @@
-﻿using System;
+﻿using SubscriberFramework;
 
 namespace PathfinderCharacterManager
 {
-    public interface IEventSubscriber
+    public static class DecisionEventTypes
     {
-        object ActivateEvent(Event e, out Event forwardEvent);
-        EventType typesToSubscribe { get; }
+        public static readonly EventCatagory
+            Query = new EventCatagory(),
+            Request = new EventCatagory(),
+            Notification = new EventCatagory();
     }
     /*
     Conventions:
-    Requests are not allowed to self remove or change state (Requests can be "hypothetical questions" as far as the subscriber is concerned)
+    Queries are not allowed to self remove or change state (Queries can be "hypothetical questions" as far as the subscriber is concerned)
     Notification should return null and never change the event
-    Requests and Notifications cannot call the decision maker
+    Queries and Notifications cannot call the decision maker
     */
-    [Flags] public enum EventType { None=0 , Progression = 1, Combat = 2, Request = 4, Notification = 8, All = ~0}
-    public abstract class Event
+    public abstract class DecisionEvent : Event
     {
-        protected Event(DecisionMaker decisionMaker)
+        protected DecisionEvent(DecisionMaker decisionMaker)
         {
             DecisionMaker = decisionMaker;
         }
-        public abstract EventType type { get; }
         public DecisionMaker DecisionMaker { get; }
     }
-    public class ProgressionEvent : Event
+    public class NotificationEvent : DecisionEvent
     {
-        public ProgressionEvent(DecisionMaker decisionMaker) : base(decisionMaker) { }
-        public override EventType type => EventType.Progression;
+        public NotificationEvent(DecisionMaker decisionMaker) : base(decisionMaker) { }
+        public override EventCatagory catagory => DecisionEventTypes.Notification;
     }
-    public class RequestEvent : Event
+    public class RequesEvent : DecisionEvent
     {
-        public RequestEvent() : base(null) { }
-        public override EventType type => EventType.Request;
+        public RequesEvent(DecisionMaker decisionMaker) : base(decisionMaker) { }
+        public override EventCatagory catagory => DecisionEventTypes.Request;
     }
-    public class CombatEvent : Event
+    public class QueryEvent : DecisionEvent
     {
-        public CombatEvent(DecisionMaker decisionMaker) : base(decisionMaker) { }
-        public override EventType type => EventType.Combat;
+        public QueryEvent() : base(null) { }
+        public override EventCatagory catagory => DecisionEventTypes.Query;
     }
-    public class RoundPassedEvent : CombatEvent
+    public class RoundPassedEvent : NotificationEvent
     {
         public RoundPassedEvent(DecisionMaker decisionMaker) : base(decisionMaker) { }
     }
-    public class LevelUpEvent : ProgressionEvent
+    public class LevelUpEvent : NotificationEvent
     {
         public LevelUpEvent(Class chosenClass, DecisionMaker maker) : base(maker)
         {
@@ -50,7 +50,7 @@ namespace PathfinderCharacterManager
         }
         private Class ChosenClass { get; }
     }
-    public class EligableClassRequestEvent : RequestEvent
+    public class EligableClassRequestEvent : QueryEvent
     {
         public EligableClassRequestEvent(Character c)
         {
@@ -58,7 +58,7 @@ namespace PathfinderCharacterManager
         }
         public Character c { get; }
     }
-    public class IsClassSkillRequestEvent : RequestEvent
+    public class IsClassSkillRequestEvent : QueryEvent
     {
         public IsClassSkillRequestEvent(SkillType skill)
         {
@@ -66,7 +66,7 @@ namespace PathfinderCharacterManager
         }
         public SkillType skill { get; }
     }
-    public class SkillBonusRequestEvent : RequestEvent
+    public class SkillBonusRequestEvent : QueryEvent
     {
         public SkillBonusRequestEvent(SkillType skill, SkillApplication application)
         {
@@ -76,7 +76,7 @@ namespace PathfinderCharacterManager
         public SkillType skill { get; }
         public SkillApplication Application { get; }
     }
-    public class DamageToDeal : RequestEvent
+    public class DamageToDeal : QueryEvent
     {
         public DamageToDeal(int damageCount, DamageKind kind, EffectType effectType)
         {

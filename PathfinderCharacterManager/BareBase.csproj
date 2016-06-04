@@ -37,6 +37,9 @@
     <Reference Include="Edge_Statistics">
       <HintPath>..\..\Edge\Statistics\bin\Debug\Edge_Statistics.dll</HintPath>
     </Reference>
+    <Reference Include="SubscriberFramework">
+      <HintPath>..\..\SubscriberFramework\SubscriberFramework\bin\Debug\SubscriberFramework.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -48,14 +51,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Abilities.cs" />
+    <Compile Include="Tokens.cs" />
     <Compile Include="Characters.cs" />
     <Compile Include="Classes.cs" />
     <Compile Include="Decisions.cs" />
+    <Compile Include="Effects.cs" />
     <Compile Include="Events.cs" />
     <Compile Include="SaveRolls.cs" />
     <Compile Include="Skills.cs" />
-    <Compile Include="Species.cs" />
+    <Compile Include="Assignable.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Traits.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

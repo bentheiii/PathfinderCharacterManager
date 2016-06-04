@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Edge.Arrays;
 using Edge.Guard;
 using Edge.Looping;
 
@@ -85,11 +86,7 @@ namespace PathfinderCharacterManager
         }
         public bool IsClassSkill(Character c)
         {
-            IGuard<bool> all = new Guard<bool>();
-            IGuard<bool> any = new Guard<bool>();
-            var tor =  c.Notify<bool>(new IsClassSkillRequestEvent(this)).HookCond(a=>a, all: all, any: any);
-            tor.Do();
-            return all.value && any.value;
+            return c.Notify<bool>(new IsClassSkillRequestEvent(this)).AnyAndAll(a=>a);
         }
         public int Bonus(Character c, SkillApplication ap)
         {
